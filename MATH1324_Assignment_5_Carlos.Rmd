@@ -1,0 +1,215 @@
+---
+title: "MATH1324 Assignment 3"
+subtitle: "Supermarket Price Wars"
+output: html_notebook
+---
+
+## Group/Individual Details
+
+* Sherrie Leanne Apps (s3633150)
+* Carlos Eduardo Castillo Garzon (s3643370)
+
+## Executive Statement
+
+The aim of this analysis is to investigate which of the two main supermarkets is cheaper. 
+Our personal hypothesis is that I will pay less for groceries at Coles than at Woolworths.
+
+A list of standard grocery products was determined by a third party. Taste.com.au is a well recognised recipy and food web page and provided the list of items to stock the "perfect pantry" found at http://www.taste.com.au/quick-easy/articles/stocking-the-perfect-pantry/wZmfZ3Bc
+
+The shop online function was used for both Coles and Woolworths to obtain the prices for identical products fitting the description provided by Taste.com.au. Initially we collected prices for both the supermarkets owned brand and third party products, but decided to narrow the analysis to the branded products. Products provided by third parties should have the same costs for production and delivery.  
+
+H0: Mean Difference (Woolworths Price - Coles Price) = 0
+HA: Mean Difference (Woolworths Price - Coles Price) not equal to 0
+
+
+## Load Packages and Data
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(RColorBrewer)
+library(knitr)
+library(car)
+library(granova)
+library(reshape2)
+
+Food <- read_excel("/Users/A/Documents/RMIT/Semester 1/Introduction to Statistics/Assignment 3/Carlos Update 1/Food_Cost.xlsx")
+```
+
+## Summary Statistics
+
+
+
+```{r}
+#Woolsworth Summary
+Food %>% summarise (Min = min(Food$Woolworths,na.rm = TRUE),
+                   Q1 = quantile(Food$Woolworths, probs = .25, na.rm = TRUE),
+                   Median = median(Food$Woolworths, na.rm = TRUE),
+                   Q3 = quantile(Food$Woolworths, probs = .75, na.rm = TRUE),
+                   Max = max(Food$Woolworths, na.rm = TRUE),
+                   Mean = mean(Food$Woolworths, na.rm = TRUE),
+                   SD = sd(Food$Woosworths, na.rm = TRUE),
+                   n = n(),
+                   Sum = sum(Food$Woolworths, na.rm = TRUE),
+                   Missing = sum(is.na(Food$Woolworths)))
+
+#Coles Summary
+Food %>% summarise (Min = min(Food$Coles,na.rm = TRUE),
+                   Q1 = quantile(Food$Coles, probs = .25, na.rm = TRUE),
+                   Median = median(Food$Coles, na.rm = TRUE),
+                   Q3 = quantile(Food$Coles, probs = .75, na.rm = TRUE),
+                   Max = max(Food$Coles, na.rm = TRUE),
+                   Mean = mean(Food$Coles, na.rm = TRUE),
+                   SD = sd(Food$Coles, na.rm = TRUE),
+                   n = n(),
+                   Sum = sum(Food$Coles, na.rm = TRUE),
+                   Missing = sum(is.na(Food$Coles)))
+
+#Difference Summary
+Food %>% summarise (Min = min(Food$d,na.rm = TRUE),
+                   Q1 = quantile(Food$d, probs = .25, na.rm = TRUE),
+                   Median = median(Food$d, na.rm = TRUE),
+                   Q3 = quantile(Food$d, probs = .75, na.rm = TRUE),
+                   Max = max(Food$d, na.rm = TRUE),
+                   Mean = mean(Food$d, na.rm = TRUE),
+                   SD = sd(Food$d, na.rm = TRUE),
+                   n = n(),
+                   Sum = sum(Food$d, na.rm = TRUE),
+                   Missing = sum(is.na(Food$d)))
+
+#Q-Q plot to check normality 
+qqPlot(Food$d, dist="norm")
+
+#Box Plot
+boxplot(
+  Food$Woolsworth,
+  Food$Coles,
+  ylab = "Price",
+  xlab = "Supermarket"
+  )
+axis(1, at = 1:2, labels = c("Woolsworth", "Coles"))
+
+
+#Price matching Plot
+matplot(t(data.frame(Food$Woolworths,Food$Coles)),
+  type = "b",
+  pch = 19,
+  col = 1,
+  lty = 1,
+  xlab = "Supermarket",
+  ylab = "Price",
+  xaxt = "n"
+  )
+axis(1, at = 1:2, labels = c("Woolsworth", "Coles"))
+
+## Why doesnt this work? 
+granova.ds(
+  data.frame(Food$Woolworths,Food$Coles),
+  xlab = "Price Wollsworth",
+  ylab = "Price Coles"
+  )
+
+```
+
+
+## Hypothesis Test
+
+Use R to perform an appropriate hypothesis test to determine which supermarket is the cheapest. You need to explain your choice of hypothesis test, any assumptions and the significance level. 
+
+```{r}
+#Paired T-Test
+t.test(Food$d, 
+       mu = 0, 
+       alternative = "two.sided")
+
+#The Critical Value
+qt(p = 0.025, df = 394)
+```
+
+## Interpretation
+The differences appear to be approximately normally distributed, so we are safe to continue with the paired-samples t-test.
+
+
+
+***in this case we can be 95% confident that the difference is between $-0.35 and $-0.12, with the estimated difference equal to $-0.24. Or simply, Woolsworth is less expensive by $0.35 to $0.11.
+
+The t∗values are ±1.97. As t=-3.88 is more extreme than -1.97, H0 should be rejected. There was  statistical significant mean difference between prices in Coles and Woolworths. 
+
+p<0.001 reported in the paired samples t-test. As p<.05, we reject H0. There was statistical significant mean difference.
+
+The 95% CI of the mean difference is found to be [-0.35 -0.12]. As the 95% CI does not capture H0, we reject it. There was statistical significant mean difference between coles and woolsworth prices.
+
+## Discussion 
+
+Discuss the findings of your investigation. What did you conclude? What were the strengths and limitations of your investigation? What improvements could be made or what would you do differently next time?
+
+```{r}
+#Pantry
+
+library(dplyr)    
+filter(Food, Department == 'Pantry') %>% summarise (Min = min(Food$d,na.rm = TRUE),
+                   Q1 = quantile(Food$d, probs = .25, na.rm = TRUE),
+                   Median = median(Food$d, na.rm = TRUE),
+                   Q3 = quantile(Food$d, probs = .75, na.rm = TRUE),
+                   Max = max(Food$d, na.rm = TRUE),
+                   Mean = mean(Food$d, na.rm = TRUE),
+                   SD = sd(Food$d, na.rm = TRUE),
+                   n = n(),
+                   Sum = sum(Food$d, na.rm = TRUE),
+                   Missing = sum(is.na(Food$d)))
+```
+```{r}
+#Paired T-Test for Pantry
+t.test(Food$d[Food$Department == 'Pantry'], 
+       mu = 0, 
+       alternative = "two.sided")
+
+#The Critical Value for Pantry
+qt(p = 0.025, df = 105)
+```
+Interpretation Pantry
+
+A paired-samples t-test was used to test for a significant mean difference of costs between Coles and Woolworths. In this case we can be 95% confident that the difference is between $-0.57 and $-0.54, with the estimated difference equal to $-0.31. Or simply, Woolsworth is less expensive by $0.57 to $0.54.
+
+The t-values are +/-1.98. As t=-2.3 is more extreme than -1.98, H0 should be rejected. There was
+statistically significant mean difference between prices in Coles and Woolworths.
+
+p<0.018 reported in the paired samples t-test. As p<.05, we reject H0. There was statistically significant mean difference.
+
+The 95% CI of the mean difference is found to be [-0.57 -0.54]. As the 95% CI does not capture H0, we reject it. There was statistically significant mean difference between coles and woolsworth Pantry prices.
+
+```{r}
+# Clothing, household, pet
+
+library(dplyr)    
+filter(Food, Department == 'Clothing, Household, pet') %>% summarise (Min = min(Food$d,na.rm = TRUE),
+                   Q1 = quantile(Food$d, probs = .25, na.rm = TRUE),
+                   Median = median(Food$d, na.rm = TRUE),
+                   Q3 = quantile(Food$d, probs = .75, na.rm = TRUE),
+                   Max = max(Food$d, na.rm = TRUE),
+                   Mean = mean(Food$d, na.rm = TRUE),
+                   SD = sd(Food$d, na.rm = TRUE),
+                   n = n(),
+                   Sum = sum(Food$d, na.rm = TRUE),
+                   Missing = sum(is.na(Food$d)))
+```
+
+```{r}
+#Paired T-Test for Clothing, Household, pet
+t.test(Food$d[Food$Department == 'Clothing, Household, pet'], 
+       mu = 0, 
+       alternative = "two.sided")
+
+#The Critical Value for Pantry
+qt(p = 0.025, df = 145)
+```
+Interpretation Clothing, Household, pet
+
+A paired-samples t-test was used to test for a significant mean difference of costs between Coles and Woolworths. In this case we can be 95% confident that the difference is between $-0.36 and $0.05, with the estimated difference equal to $-0.15. Or simply, Woolsworth is less expensive by $0.36 to $0.05.
+
+The t-values are +/-1.98. As t=-1.51 is less extreme than -1.98, H0 should fail to be rejected. There was not statistical significant mean difference between prices in Coles and Woolworths.
+
+p<0.135 reported in the paired samples t-test. As p>.05, we fail to reject H0. There was not statistical significant mean difference.
+
+The 95% CI of the mean difference is found to be [-0.36 0.05]. As the 95% CI does capture H0, we fail to reject it. There was not statistical significant mean difference between coles and woolsworth Clothing, Household, pet prices.
